@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFootball | Developer Education Simulation</title>
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9775131443425311" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;700;900&family=Inter:wght@300;400;600&family=Noto+Sans+Arabic:wght@400;700;900&display=swap');
+
+        :root {
+            --ef-yellow: #fff200;
+            --ef-blue: #00469b;
+            --ef-dark: #050a14;
+        }
+
+        body {
+            background-color: var(--ef-dark);
+            color: #f8fafc;
+            font-family: 'Inter', 'Noto+Sans+Arabic', sans-serif;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at top right, rgba(0, 70, 155, 0.3), transparent),
+                              radial-gradient(circle at bottom left, rgba(255, 242, 0, 0.05), transparent);
+            transition: direction 0.3s ease;
+        }
+
+        .ef-font {
+            font-family: 'Kanit', 'Noto+Sans+Arabic', sans-serif;
+            font-style: italic;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .ef-logo-circle {
+            background: linear-gradient(135deg, var(--ef-blue) 0%, #002a5c 100%);
+            border: 3px solid var(--ef-yellow);
+        }
+
+        .verification-bar {
+            transition: width 0.4s ease-out;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.8; }
+        }
+
+        .error-alert {
+            animation: pulse-red 2s infinite;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 242, 0, 0.1);
+            border-top: 4px solid var(--ef-yellow);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .task-locked {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+
+        [dir="rtl"] .ef-font { font-style: normal; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4" dir="ltr">
+
+    <!-- Language Toggle -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="lang-toggle" class="glass-panel px-4 py-2 rounded-full text-[10px] font-bold tracking-widest text-[var(--ef-yellow)] border border-[var(--ef-yellow)]/30 hover:bg-[var(--ef-yellow)] hover:text-[var(--ef-blue)] transition-all">
+            ARABIC / العربية
+        </button>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app-container" class="w-full max-w-md relative pb-12">
+        
+        <!-- eFootball Header -->
+        <div class="flex flex-col items-center mb-8">
+            <div class="ef-logo-circle w-20 h-20 rounded-full flex items-center justify-center mb-3 shadow-2xl shadow-blue-500/20">
+                <svg viewBox="0 0 100 100" class="w-12 h-12">
+                    <path d="M20,50 Q50,20 80,50 Q50,80 20,50" fill="none" stroke="#fff200" stroke-width="8"/>
+                    <circle cx="50" cy="50" r="15" fill="#fff200"/>
+                </svg>
+            </div>
+            <h1 class="ef-font text-4xl font-black italic tracking-tighter text-white">
+                <span class="text-white">e</span><span class="text-[var(--ef-yellow)]">Football</span>
+            </h1>
+        </div>
+
+        <!-- Step 1: Login Form -->
+        <div id="form-step" class="glass-panel rounded-xl p-8 space-y-6 border-t-4 border-t-[var(--ef-blue)]">
+            <div class="space-y-1">
+                <h2 id="login-title" class="text-lg font-bold text-slate-100">Sync KONAMI ID</h2>
+                <p id="login-subtitle" class="text-slate-400 text-xs">Verify account status for seasonal rewards.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="relative">
+                    <label id="label-username" class="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Username / ID</label>
+                    <input type="text" id="username" placeholder="Enter ID..." 
+                        class="w-full bg-black/40 border border-slate-700 rounded-lg py-3 px-4 focus:outline-none focus:border-[var(--ef-yellow)] transition-all text-white font-mono">
+                </div>
+
+                <button id="start-btn" 
+                    class="w-full bg-[var(--ef-yellow)] text-[var(--ef-blue)] hover:brightness-110 py-4 rounded-lg font-black text-sm uppercase tracking-widest transition-all transform active:scale-95 shadow-xl">
+                    CHECK ACCOUNT STATUS
+                </button>
+            </div>
+
+            <!-- Partner Offers Section -->
+            <div class="pt-6 border-t border-white/5 space-y-4">
+                <p id="label-partner-offers" class="text-[9px] uppercase tracking-[0.3em] text-slate-500 font-bold text-center">Partner Offers</p>
+                
+                <!-- GP Offer -->
+                <div onclick="window.open(REDIRECT_URL, '_blank')" class="bg-gradient-to-r from-blue-900/40 to-black/40 p-4 rounded-xl border border-blue-500/20 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-600/20 rounded-full flex items-center justify-center font-black text-blue-400 text-xs italic">GP</div>
+                        <div>
+                            <h4 id="gp-title" class="text-xs font-black text-white italic">Unlock 5,000,000 GP</h4>
+                            <p id="gp-subtitle" class="text-[9px] text-slate-400">Complete one sponsor survey</p>
+                        </div>
+                    </div>
+                    <span id="gp-btn" class="text-[10px] font-black text-blue-400 uppercase tracking-widest px-3 py-1 border border-blue-400/30 rounded-full">JOIN</span>
+                </div>
+
+                <!-- Player Pack Offer -->
+                <div onclick="window.open(REDIRECT_URL, '_blank')" class="bg-gradient-to-r from-yellow-900/20 to-black/40 p-4 rounded-xl border border-yellow-500/20 flex items-center justify-between cursor-pointer hover:border-yellow-500/50 transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-full flex items-center justify-center text-xl">⚽</div>
+                        <div>
+                            <h4 id="pack-title" class="text-xs font-black text-[var(--ef-yellow)] italic">Epic Player Pack 2026</h4>
+                            <p id="pack-subtitle" class="text-[9px] text-slate-400">Only for unverified accounts</p>
+                        </div>
+                    </div>
+                    <span id="pack-btn" class="text-[10px] font-black text-[var(--ef-yellow)] uppercase tracking-widest px-3 py-1 border border-yellow-400/30 rounded-full">CLAIM</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Loading State -->
+        <div id="loading-step" class="hidden glass-panel rounded-xl p-12 flex flex-col items-center justify-center space-y-6">
+            <div class="spinner"></div>
+            <div class="text-center">
+                <p id="loading-text" class="ef-font text-lg text-[var(--ef-yellow)] italic animate-pulse uppercase text-center">CONNECTING TO SERVER...</p>
+                <p id="status-text" class="text-[10px] text-slate-400 mt-2 uppercase tracking-widest">Initialising secure handshake</p>
+            </div>
+        </div>
+
+        <!-- Step 3: Verification Panel -->
+        <div id="verify-step" class="hidden glass-panel rounded-xl p-8 space-y-6">
+            <div class="flex justify-between items-end border-b border-white/5 pb-4">
+                <div>
+                    <p id="label-querying" class="text-[10px] text-slate-500 uppercase font-bold">Querying ID:</p>
+                    <h3 class="ef-font text-xl text-white display-user">USER_123</h3>
+                </div>
+                <span id="percent-text" class="text-[var(--ef-yellow)] font-black text-2xl">0%</span>
+            </div>
+
+            <div class="space-y-2">
+                <div class="w-full h-2 bg-black rounded-full overflow-hidden">
+                    <div id="progress-bar" class="verification-bar h-full bg-gradient-to-r from-[var(--ef-blue)] to-[var(--ef-yellow)] w-0"></div>
+                </div>
+                <div id="activity-log" class="h-24 overflow-hidden text-[9px] font-mono text-slate-500 flex flex-col justify-end">
+                </div>
+            </div>
+
+            <div id="failure-notice" class="hidden space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                <div class="bg-red-600/20 border-l-4 border-red-600 p-4 rounded-r-lg error-alert">
+                    <p id="error-title" class="text-red-500 font-black text-sm uppercase tracking-tighter">AUTHENTICATION FAILED</p>
+                    <p id="error-subtitle" class="text-white text-[11px] mt-1">Your account is not verified. Limited access mode enabled.</p>
+                </div>
+
+                <button id="verify-action-btn" class="w-full bg-red-600 text-white hover:bg-red-700 py-3 rounded-lg font-bold text-sm tracking-widest shadow-lg transition-all active:scale-95">
+                    VERIFY
+                </button>
+
+                <div id="tasks-container" class="hidden space-y-3 pt-4 border-t border-white/10">
+                    <p id="label-tasks-header" class="text-[8px] uppercase tracking-[0.3em] text-[var(--ef-yellow)] font-bold">Verification Tasks</p>
+                    
+                    <div onclick="handleTaskClick(1)" class="bg-white/5 p-4 rounded-lg border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-xs text-white">1</div>
+                            <span id="task1-label" class="text-xs font-bold text-white uppercase">task 1</span>
+                        </div>
+                        <span id="task1-status" class="text-[10px] text-[var(--ef-yellow)] font-bold">START</span>
+                    </div>
+
+                    <div id="task2" onclick="handleTaskClick(2)" class="task-locked bg-white/5 p-4 rounded-lg border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center font-bold text-xs text-white">2</div>
+                            <span id="task2-label" class="text-xs font-bold text-white uppercase">task 2</span>
+                        </div>
+                        <span id="task2-status" class="text-[10px] text-slate-500 font-bold">LOCKED</span>
+                    </div>
+
+                    <div id="task3" onclick="handleTaskClick(3)" class="task-locked bg-white/5 p-4 rounded-lg border border-white/10 flex items-center justify-between cursor-pointer hover:bg-white/10 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-slate-700 rounded-full flex items-center justify-center font-bold text-xs text-white">3</div>
+                            <span id="task3-label" class="text-xs font-bold text-white uppercase">task 3</span>
+                        </div>
+                        <span id="task3-status" class="text-[10px] text-slate-500 font-bold">LOCKED</span>
+                    </div>
+                </div>
+
+                <button id="try-another-btn" onclick="location.reload()" class="w-full text-[10px] text-slate-500 hover:text-white transition-colors">
+                    Try another account
+                </button>
+            </div>
+        </div>
+
+        <!-- Privacy Policy Panel -->
+        <div id="privacy-step" class="hidden glass-panel rounded-xl p-8 space-y-6 max-h-[75vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <h2 id="policy-header" class="ef-font text-xl text-[var(--ef-yellow)] uppercase italic">Privacy Policy</h2>
+                <button onclick="togglePrivacy(false)" class="text-slate-400 hover:text-white text-2xl">✕</button>
+            </div>
+            <div id="policy-content" class="text-[11px] space-y-6 text-slate-300 leading-relaxed font-sans pb-4">
+                <!-- Content injected via JS for translations -->
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <button id="policy-toggle-btn" onclick="togglePrivacy(true)" class="text-[9px] uppercase tracking-widest text-slate-600 hover:text-[var(--ef-yellow)] transition-colors">
+                Privacy Policy & Disclaimers
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const REDIRECT_URL = "https://cdn.ms1a.com/1874/en.html?b=22778946&browser=chrome&campaignid=8961917&city=agadir&country=MA&device=other&expires=1769794007&ip=197.146.101.116&md5=izMeptjGcQ6OlNjlbTMZ-w&md5Ip=_UXqjRVTNIY20CGxABTokw&os=android&s=1041151579243421993&sg=96B7bBOCWBxR8iryFsaygw&sgi=_NY60znWw24xQXzyKfmNUw&sgp=0VtZQUlYWHNg49_eSsldXA&sgr=3hBPq1CysFeTMVTWu6PCnQ&sgt=1769793407&sgu=3-YnUPpShS0imCaRkJxA4Q&ssk=d120e6fdfeeeb9d4acd07ac3c1a8b5ef&svar=1769793407&var=3554_u756724&ymid=1041151579243421993&z=8671935&zdekr=yuvDZXj183Qyf4MohVI51g&zdekrIp=0VvRvJ6y06q_OoviUuEGPg";
+
+        let completedTasks = 0;
+        let currentLang = 'en';
+
+        const i18n = {
+            en: {
+                toggle: "ARABIC / العربية",
+                loginTitle: "Sync KONAMI ID",
+                loginSubtitle: "Verify account status for seasonal rewards.",
+                labelUser: "Username / ID",
+                startBtn: "CHECK ACCOUNT STATUS",
+                partnerOffers: "Partner Offers",
+                gpTitle: "Unlock 5,000,000 GP",
+                gpSubtitle: "Complete one sponsor survey",
+                gpBtn: "JOIN",
+                packTitle: "Epic Player Pack 2026",
+                packSubtitle: "Only for unverified accounts",
+                packBtn: "CLAIM",
+                loadingText: "CONNECTING TO SERVER...",
+                handshake: "Initialising secure handshake",
+                querying: "Querying ID:",
+                errorTitle: "AUTHENTICATION FAILED",
+                errorSubtitle: "Your account is not verified. Limited access mode enabled.",
+                verifyBtn: "VERIFY",
+                taskHeader: "Verification Tasks",
+                task: "TASK",
+                start: "START",
+                locked: "LOCKED",
+                tryAnother: "Try another account",
+                policyHeader: "Privacy Policy",
+                policyBtn: "Privacy Policy & Disclaimers",
+                loadingSteps: ["Establishing tunnel...", "Querying database...", "Syncing local cache...", "Success"],
+                logs: ["Connection stable...", "Searching KONAMI ID database...", "Found matching record...", "Running integrity hash...", "Verifying player licence..."],
+                logErr: "> ERROR: SIGNATURE MISMATCH",
+                policyBody: `
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">Information Collection:</h3><ul class="list-disc pl-4 space-y-1"><li>This website does not collect, store, or transmit any personal information.</li><li>No user data is retained on our servers or databases.</li><li>The username entered is used solely for display purposes within the website.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">Cookies and Tracking:</h3><ul class="list-disc pl-4 space-y-1"><li>This website does not use cookies or tracking technologies.</li><li>No analytics or user behavior tracking is implemented.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">Third-Party Services:</h3><ul class="list-disc pl-4 space-y-1"><li>Any advertisements displayed are provided by third-party services.</li><li>These services have their own privacy policies and data collection practices.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">Disclaimer:</h3><ul class="list-disc pl-4 space-y-1"><li>This website is for entertainment purposes only.</li><li>It does not actually generate coins or connect to any gaming platforms.</li><li>This is not affiliated with or endorsed by the official eFootball game.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">Changes:</h3><ul class="list-disc pl-4 space-y-1"><li>This privacy policy may be updated at any time without notice.</li><li>Entertainment Purpose Disclaimer:
+- This website is intended for entertainment and demonstration purposes only.
+- This is a simulated interface and does not actually generate coins or connect to any gaming platforms.
+- No real currency or virtual goods are provided through this service.
+- This website is not affiliated with, endorsed by, or connected to the official eFootball game or its developers.
+- Any resemblance to actual coin generation systems is purely coincidental and for demonstration purposes.
+- Users should not expect to receive any actual coins or in-game currency through this website.
+
+By using this website, you acknowledge that this is a demonstration project designed for entertainment purposes only.</li></ul></div>
+                    <div class="pt-4 border-t border-white/5 text-center italic text-slate-400 text-[10px]">By using this website, you acknowledge that this is a demonstration project and no real currency or virtual goods are provided.</div>
+                `
+            },
+            ar: {
+                toggle: "ENGLISH / الإنجليزية",
+                loginTitle: "مزامنة معرف KONAMI",
+                loginSubtitle: "تحقق من حالة الحساب للحصول على المكافآت الموسمية.",
+                labelUser: "اسم المستخدم / المعرف",
+                startBtn: "التحقق من حالة الحساب",
+                partnerOffers: "عروض الشركاء",
+                gpTitle: "فتح 5,000,000 GP",
+                gpSubtitle: "أكمل استطلاعاً واحداً من الراعي",
+                gpBtn: "انضم",
+                packTitle: "حزمة اللاعب الملحمي 2026",
+                packSubtitle: "فقط للحسابات غير الموثقة",
+                packBtn: "مطالبة",
+                loadingText: "جاري الاتصال بالسيرفر...",
+                handshake: "بدء المصافحة الآمنة",
+                querying: "الاستعلام عن المعرف:",
+                errorTitle: "فشل المصادقة",
+                errorSubtitle: "حسابك غير موثق. تم تمكين وضع الوصول المحدود.",
+                verifyBtn: "تحقق الآن",
+                taskHeader: "مهام التحقق",
+                task: "مهمة",
+                start: "ابدأ",
+                locked: "مغلق",
+                tryAnother: "جرب حساباً آخر",
+                policyHeader: "سياسة الخصوصية",
+                policyBtn: "سياسة الخصوصية وإخلاء المسؤولية",
+                loadingSteps: ["إنشاء النفق...", "الاستعلام عن القاعدة...", "مزامنة التخزين المؤقت...", "تم النجاح"],
+                logs: ["الاتصال مستقر...", "البحث في قاعدة بيانات KONAMI...", "تم العثور على سجل مطابق...", "جارٍ فحص سلامة البيانات...", "التحقق من ترخيص اللاعب..."],
+                logErr: "> خطأ: عدم تطابق التوقيع",
+                policyBody: `
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">جمع المعلومات:</h3><ul class="list-disc pr-4 space-y-1"><li>هذا الموقع لا يجمع أو يخزن أو ينقل أي معلومات شخصية.</li><li>لا يتم الاحتفاظ ببيانات المستخدم على خوادمنا.</li><li>اسم المستخدم المدخل يستخدم فقط لأغراض العرض داخل الموقع.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">ملفات تعريف الارتباط:</h3><ul class="list-disc pr-4 space-y-1"><li>هذا الموقع لا يستخدم ملفات تعريف الارتباط.</li><li>لا يوجد تتبع لسلوك المستخدم.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">خدمات الطرف الثالث:</h3><ul class="list-disc pr-4 space-y-1"><li>الإعلانات المعروضة مقدمة من خدمات طرف ثالث.</li><li>هذه الخدمات لها سياسات خصوصية خاصة بها.</li></ul></div>
+                    <div><h3 class="text-white font-bold mb-2 uppercase tracking-wider underline decoration-[var(--ef-yellow)]/30">إخلاء المسؤولية:</h3><ul class="list-disc pr-4 space-y-1"><li>هذا الموقع للأغراض الترفيهية فقط.</li><li>لا يقوم بتوليد كوينز حقيقية أو الاتصال بمنصات الألعاب.</li><li>غير تابع للعبة eFootball الرسمية.</li></ul></div>
+                    <div class="pt-4 border-t border-white/5 text-center italic text-slate-400 text-[10px]">باستخدامك لهذا الموقع، فإنك تقر بأن هذا مشروع تجريبي ولا يتم تقديم عملات حقيقية أو سلع افتراضية.</div>
+                `
+            }
+        };
+
+        function updateUI() {
+            const t = i18n[currentLang];
+            document.body.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            
+            // Buttons & Toggles
+            document.getElementById('lang-toggle').textContent = t.toggle;
+            document.getElementById('start-btn').textContent = t.startBtn;
+            document.getElementById('verify-action-btn').textContent = t.verifyBtn;
+            document.getElementById('policy-toggle-btn').textContent = t.policyBtn;
+            document.getElementById('try-another-btn').textContent = t.tryAnother;
+
+            // Step 1
+            document.getElementById('login-title').textContent = t.loginTitle;
+            document.getElementById('login-subtitle').textContent = t.loginSubtitle;
+            document.getElementById('label-username').textContent = t.labelUser;
+            document.getElementById('label-partner-offers').textContent = t.partnerOffers;
+            document.getElementById('gp-title').textContent = t.gpTitle;
+            document.getElementById('gp-subtitle').textContent = t.gpSubtitle;
+            document.getElementById('gp-btn').textContent = t.gpBtn;
+            document.getElementById('pack-title').textContent = t.packTitle;
+            document.getElementById('pack-subtitle').textContent = t.packSubtitle;
+            document.getElementById('pack-btn').textContent = t.packBtn;
+
+            // Step 2 & 3
+            document.getElementById('loading-text').textContent = t.loadingText;
+            document.getElementById('label-querying').textContent = t.querying;
+            document.getElementById('error-title').textContent = t.errorTitle;
+            document.getElementById('error-subtitle').textContent = t.errorSubtitle;
+            document.getElementById('label-tasks-header').textContent = t.taskHeader;
+
+            // Tasks
+            for(let i=1; i<=3; i++) {
+                document.getElementById(`task${i}-label`).textContent = `${t.task} ${i}`;
+                const status = document.getElementById(`task${i}-status`);
+                if(status) status.textContent = (i === 1 || completedTasks >= i-1) ? t.start : t.locked;
+            }
+
+            // Policy
+            document.getElementById('policy-header').textContent = t.policyHeader;
+            document.getElementById('policy-content').innerHTML = t.policyBody;
+        }
+
+        // Initialize UI
+        updateUI();
+
+        document.getElementById('lang-toggle').addEventListener('click', () => {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            updateUI();
+        });
+
+        function togglePrivacy(show) {
+            const steps = [document.getElementById('form-step'), document.getElementById('loading-step'), document.getElementById('verify-step')];
+            const privacy = document.getElementById('privacy-step');
+            if (show) {
+                steps.forEach(s => s.classList.add('hidden'));
+                privacy.classList.remove('hidden');
+            } else {
+                privacy.classList.add('hidden');
+                if (!document.getElementById('verify-step').classList.contains('hidden')) document.getElementById('verify-step').classList.remove('hidden');
+                else document.getElementById('form-step').classList.remove('hidden');
+            }
+        }
+
+        function handleTaskClick(taskNum) {
+            if (taskNum === 1) {
+                unlockTask(2);
+                window.open(REDIRECT_URL, '_blank');
+            } else if (taskNum === 2 && completedTasks >= 1) {
+                unlockTask(3);
+                window.open(REDIRECT_URL, '_blank');
+            } else if (taskNum === 3 && completedTasks >= 2) {
+                window.open(REDIRECT_URL, '_blank');
+            }
+        }
+
+        function unlockTask(num) {
+            completedTasks = Math.max(completedTasks, num - 1);
+            const taskEl = document.getElementById(`task${num}`);
+            if (taskEl) {
+                taskEl.classList.remove('task-locked');
+                const badge = taskEl.querySelector('div div');
+                const label = document.getElementById(`task${num}-status`);
+                badge.classList.remove('bg-slate-700');
+                badge.classList.add('bg-blue-600');
+                label.textContent = i18n[currentLang].start;
+                label.classList.remove('text-slate-500');
+                label.classList.add('text-[var(--ef-yellow)]');
+            }
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const user = document.getElementById('username').value;
+            if (user.length < 3) return;
+            document.querySelectorAll('.display-user').forEach(el => el.textContent = user);
+            document.getElementById('form-step').classList.add('hidden');
+            document.getElementById('loading-step').classList.remove('hidden');
+            runLoadingSequence();
+        });
+
+        function runLoadingSequence() {
+            const steps = i18n[currentLang].loadingSteps;
+            let idx = 0;
+            const timer = setInterval(() => {
+                document.getElementById('status-text').textContent = steps[idx];
+                idx++;
+                if (idx >= steps.length) {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        document.getElementById('loading-step').classList.add('hidden');
+                        document.getElementById('verify-step').classList.remove('hidden');
+                        startVerificationBar();
+                    }, 800);
+                }
+            }, 600);
+        }
+
+        function startVerificationBar() {
+            let p = 0;
+            const bar = document.getElementById('progress-bar');
+            const txt = document.getElementById('percent-text');
+            const logBox = document.getElementById('activity-log');
+            const logs = [...i18n[currentLang].logs];
+
+            const interval = setInterval(() => {
+                p += Math.floor(Math.random() * 8) + 2;
+                if (p > 100) p = 100;
+                bar.style.width = p + '%';
+                txt.textContent = p + '%';
+
+                if (p % 20 < 10 && logs.length > 0) {
+                    const line = document.createElement('p');
+                    line.textContent = `> ${logs.shift()}`;
+                    logBox.appendChild(line);
+                }
+
+                if (p >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        const errLine = document.createElement('p');
+                        errLine.className = "text-red-500 font-bold";
+                        errLine.textContent = i18n[currentLang].logErr;
+                        logBox.appendChild(errLine);
+                        document.getElementById('failure-notice').classList.remove('hidden');
+                    }, 600);
+                }
+            }, 300);
+        }
+
+        document.getElementById('verify-action-btn').addEventListener('click', function() {
+            this.classList.add('hidden');
+            document.getElementById('tasks-container').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
